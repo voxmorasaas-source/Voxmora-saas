@@ -10,7 +10,7 @@ export interface StatCardProps {
 
 export function StatCard({ title, value, supportingText }: StatCardProps) {
   return (
-    <div className="bg-white border border-[#EAE6F2] rounded-xl p-4.5 hover:border-[#D8CFEE] transition-colors flex flex-col justify-between">
+    <div className="bg-white border border-[#E9E5F0] rounded-xl p-4.5 hover:border-[#D8CFEE] transition-colors flex flex-col justify-between shadow-2xs">
       <div>
         <p className="text-[10px] uppercase tracking-wider font-semibold text-[#9995AA]">
           {title}

@@ -54,7 +54,9 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
           aria-label="View notifications"
         >
           <Bell className="w-4.5 h-4.5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#7652D6] rounded-full ring-2 ring-white"></span>
+          <span className="absolute top-1 right-1 min-w-[15px] h-[15px] bg-[#7652D6] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 ring-2 ring-white">
+            3
+          </span>
         </button>
 
         {/* Divider */}
@@ -63,11 +65,11 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
         {/* Circular User Avatar with Initials */}
         <div className="flex items-center gap-2.5 cursor-pointer">
           <div className="w-8 h-8 rounded-full bg-[#EDE5FF] border border-[#D8CFEE] text-[#7048D8] font-bold text-xs flex items-center justify-center shadow-2xs">
-            JM
+            SC
           </div>
           <div className="hidden lg:block text-left">
-            <p className="text-xs font-bold text-[#17213B] leading-tight">Jenil M.</p>
-            <p className="text-[10px] text-[#77758C] leading-none">Admin</p>
+            <p className="text-xs font-bold text-[#17213B] leading-tight">Sophie Carter</p>
+            <p className="text-[10px] text-[#77758C] leading-none">Studio owner</p>
           </div>
         </div>
       </div>

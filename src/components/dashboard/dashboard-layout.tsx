@@ -7,12 +7,15 @@ import { DashboardWelcome } from './dashboard-welcome';
 import { StatsGrid } from './stats-grid';
 import { RevenueOverview } from './revenue-overview';
 import { AIReceptionistCard } from './ai-receptionist-card';
+import { TodaysAppointments } from './todays-appointments';
+import { RecentActivity } from './recent-activity';
+import { BookingsByService } from './bookings-by-service';
 
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col md:flex-row antialiased text-[#17213B]">
+    <div className="min-h-screen bg-[#F8F7FC] flex flex-col md:flex-row antialiased text-[#17213B]">
       {/* Fixed Left Sidebar (250px) */}
       <DashboardSidebar
         isOpen={sidebarOpen}
@@ -21,26 +24,34 @@ export function DashboardLayout() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F8F7FC]">
         {/* Top Header (64px) */}
         <DashboardHeader onToggleSidebar={() => setSidebarOpen(true)} />
 
         {/* Dashboard Content Container */}
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-6 pb-12 max-w-7xl w-full mx-auto">
-          {/* Welcome Header */}
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-5 pb-12 max-w-7xl w-full mx-auto">
+          {/* 1. Welcome Header */}
           <DashboardWelcome />
 
-          {/* 4 Statistics Cards */}
+          {/* 2. Statistics Cards */}
           <StatsGrid />
 
-          {/* Revenue Overview Recharts Card */}
+          {/* 3. Revenue Overview Recharts Card */}
           <RevenueOverview />
 
-          {/* AI Receptionist Mira Card */}
+          {/* 4. AI Receptionist Mira Card */}
           <AIReceptionistCard />
+
+          {/* 5. NEW: Today's Appointments */}
+          <TodaysAppointments />
+
+          {/* 6. NEW: Recent Activity */}
+          <RecentActivity />
+
+          {/* 7. NEW: Bookings By Service */}
+          <BookingsByService />
         </main>
       </div>
     </div>
   );
 }
-

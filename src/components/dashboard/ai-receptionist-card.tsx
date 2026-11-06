@@ -3,7 +3,7 @@ import { Bot, PhoneCall, CheckCircle2, PhoneForwarded, Settings2, Sparkles } fro
 
 export function AIReceptionistCard() {
   return (
-    <div className="bg-white border border-[#EAE6F2] rounded-xl p-5 mb-8">
+    <div className="bg-white border border-[#E9E5F0] rounded-xl p-4 sm:p-5 mb-3 shadow-2xs">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#F4F1FA]">
         <div className="flex items-center gap-3">

@@ -6,11 +6,11 @@ export function DashboardWelcome() {
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <h1 className="text-2xl lg:text-[26px] font-bold text-[#17213B] tracking-tight flex items-center gap-2">
-          <span>Good morning, there!</span>
+          <span>Good morning, Sophie</span>
           <span className="text-xl" role="img" aria-label="sparkles">✨</span>
         </h1>
         <p className="text-sm text-[#77758C] mt-1">
-          Here's what's happening at your business today.
+          Here's what's happening at your studio today.
         </p>
       </div>
 

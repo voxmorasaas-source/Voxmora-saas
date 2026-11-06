@@ -4,7 +4,7 @@ import { RevenueChart } from './revenue-chart';
 
 export function RevenueOverview() {
   return (
-    <div className="bg-white border border-[#EAE6F2] rounded-xl p-5 mb-6">
+    <div className="bg-white border border-[#E9E5F0] rounded-xl p-4 sm:p-5 mb-3 shadow-2xs">
       {/* Top Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-bold text-[#17213B] tracking-tight">
