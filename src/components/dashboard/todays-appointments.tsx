@@ -89,7 +89,7 @@ export function TodaysAppointments() {
                 <th className="pb-3 font-semibold">TIME</th>
                 <th className="pb-3 font-semibold">AMOUNT</th>
                 <th className="pb-3 font-semibold">STATUS</th>
-                <th className="pb-3 font-semibold text-right">ACTION</th>
+                <th className="pb-3 font-semibold text-right"><span className="sr-only">Action</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F4F1FA] text-xs">

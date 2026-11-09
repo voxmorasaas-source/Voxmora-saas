@@ -42,38 +42,38 @@ const navigationSections: NavSection[] = [
   {
     title: 'WORKSPACE',
     items: [
-      { label: 'Dashboard', href: '#dashboard', icon: LayoutDashboard },
+      { label: 'Dashboard', href: '/', icon: LayoutDashboard },
       { label: 'Calendar', href: '#calendar', icon: Calendar },
-      { label: 'Clients', href: '#clients', icon: Users },
-      { label: 'Online Booking', href: '#booking', icon: Globe },
+      { label: 'Clients', href: '/clients', icon: Users },
+      { label: 'Online booking', href: '/booking', icon: Globe },
     ],
   },
   {
     title: 'AI RECEPTIONIST',
     items: [
       {
-        label: 'AI Receptionist',
-        href: '#receptionist',
+        label: 'AI receptionist',
+        href: '/receptionist',
         icon: Bot,
         badge: 'NEW',
         badgeType: 'new',
       },
       {
-        label: 'Calls & Messages',
-        href: '#calls',
+        label: 'Calls & messages',
+        href: '/calls',
         icon: PhoneCall,
         badge: '3',
         badgeType: 'count',
       },
-      { label: 'Automations', href: '#automations', icon: Zap },
+      { label: 'Automations', href: '/automations', icon: Zap },
     ],
   },
   {
     title: 'MANAGEMENT',
     items: [
-      { label: 'Sales & Payments', href: '#sales', icon: CreditCard },
-      { label: 'Staff & Services', href: '#staff', icon: Briefcase },
-      { label: 'Reports & Settings', href: '#settings', icon: Settings },
+      { label: 'Sales & payments', href: '/sales', icon: CreditCard },
+      { label: 'Staff & services', href: '/staff', icon: Briefcase },
+      { label: 'Reports & settings', href: '/settings', icon: Settings },
     ],
   },
 ];
@@ -96,14 +96,13 @@ export function DashboardSidebar({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-50 md:z-10 h-screen w-[250px] min-w-[250px] bg-[#F8F6FF] border-r border-[#EAE6F2] p-4 flex flex-col justify-between transition-transform duration-200 ease-in-out md:translate-x-0 ${
-          isOpen ? 'translate-x-0 shadow-xl md:shadow-none' : '-translate-x-full'
-        }`}
+        className={`fixed md:sticky top-0 left-0 z-50 md:z-10 h-screen w-[250px] min-w-[250px] bg-white border-r border-[#EAE8F2] p-3 sm:p-3.5 flex flex-col justify-between transition-transform duration-200 ease-in-out md:translate-x-0 ${isOpen ? 'translate-x-0 shadow-xl md:shadow-none' : '-translate-x-full'
+          }`}
       >
         {/* Top Scrollable Navigation */}
         <div className="flex-1 overflow-y-auto pr-0.5">
           {/* Top Brand Section */}
-          <div className="flex items-center justify-between pb-5 pt-1 px-2 border-b border-[#EAE6F2]/60 mb-2">
+          <div className="flex items-center justify-between pb-5 pt-1 px-2 border-b border-[#EAE8F2]/60 mb-2">
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-[7px] bg-[#7652D6] flex items-center justify-center shadow-xs">
                 <Sparkles className="w-4 h-4 text-white fill-white" />
@@ -118,7 +117,7 @@ export function DashboardSidebar({
               <button
                 type="button"
                 onClick={onClose}
-                className="md:hidden p-1.5 rounded-lg text-[#77758C] hover:bg-[#EDE5FF] hover:text-[#17213B] transition-colors"
+                className="md:hidden p-1.5 rounded-lg text-[#66708A] hover:bg-[#EDE5FF] hover:text-[#17213B] transition-colors"
                 aria-label="Close menu"
               >
                 <X className="w-4 h-4" />
@@ -138,7 +137,8 @@ export function DashboardSidebar({
                 {/* Items */}
                 <ul className="space-y-1">
                   {section.items.map((item) => {
-                    const isActive = activePath === item.label;
+                    const isActive =
+                      activePath.toLowerCase() === item.label.toLowerCase();
                     const Icon = item.icon;
 
                     return (
@@ -146,17 +146,15 @@ export function DashboardSidebar({
                         <Link
                           href={item.href}
                           onClick={() => onClose?.()}
-                          className={`flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium transition-colors ${
-                            isActive
-                              ? 'bg-[#EDE5FF] text-[#7048D8] font-semibold'
-                              : 'text-[#77758C] hover:bg-[#F2EDFD] hover:text-[#17213B]'
-                          }`}
+                          className={`flex items-center justify-between px-3 py-2 rounded-[7px] text-[13px] font-medium transition-colors ${isActive
+                              ? 'bg-[#F0EAFE] text-[#6946C7] font-semibold'
+                              : 'text-[#66708A] hover:bg-[#F2EDFD] hover:text-[#17213B]'
+                            }`}
                         >
                           <div className="flex items-center gap-2.5">
                             <Icon
-                              className={`w-4 h-4 shrink-0 ${
-                                isActive ? 'text-[#7048D8]' : 'text-[#77758C]'
-                              }`}
+                              className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#6946C7]' : 'text-[#66708A]'
+                                }`}
                             />
                             <span>{item.label}</span>
                           </div>
@@ -164,11 +162,10 @@ export function DashboardSidebar({
                           {/* Badges */}
                           {item.badge && (
                             <span
-                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                                item.badgeType === 'new'
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${item.badgeType === 'new'
                                   ? 'bg-[#7652D6] text-white'
-                                  : 'bg-[#EDE5FF] text-[#7048D8]'
-                              }`}
+                                  : 'bg-[#EDE5FF] text-[#6946C7]'
+                                }`}
                             >
                               {item.badge}
                             </span>

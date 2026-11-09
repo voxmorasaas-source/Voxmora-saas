@@ -24,7 +24,29 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/forgot-password') ||
     pathname.startsWith('/reset-password');
 
-  if (!user && !isAuthPage && pathname !== '/') {
+  if (
+    !user &&
+    !isAuthPage &&
+    pathname !== '/' &&
+    !pathname.startsWith('/clients') &&
+    !pathname.startsWith('/booking') &&
+    !pathname.startsWith('/online-booking') &&
+    !pathname.startsWith('/receptionist') &&
+    !pathname.startsWith('/ai-receptionist') &&
+    !pathname.startsWith('/calls') &&
+    !pathname.startsWith('/calls-and-messages') &&
+    !pathname.startsWith('/messages') &&
+    !pathname.startsWith('/automations') &&
+    !pathname.startsWith('/sales') &&
+    !pathname.startsWith('/sales-and-payments') &&
+    !pathname.startsWith('/payments') &&
+    !pathname.startsWith('/staff') &&
+    !pathname.startsWith('/staff-and-services') &&
+    !pathname.startsWith('/services') &&
+      !pathname.startsWith('/settings') &&
+      !pathname.startsWith('/reports') &&
+      !pathname.startsWith('/reports-and-settings')
+  ) {
     // Redirect unauthenticated visitors to login
     const url = request.nextUrl.clone();
     url.pathname = '/login';

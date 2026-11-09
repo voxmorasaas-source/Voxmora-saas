@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Bell, HelpCircle, Menu } from 'lucide-react';
+import { Search, Sparkles, HelpCircle, Menu } from 'lucide-react';
 
 interface DashboardHeaderProps {
   onToggleSidebar?: () => void;
@@ -9,14 +9,14 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
   return (
-    <header className="h-16 bg-white border-b border-[#EEEAF4] px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20">
+    <header className="h-[56px] bg-white border-b border-[#EAE8F2] px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20">
       {/* Left Search Bar & Mobile Trigger */}
-      <div className="flex items-center gap-3 flex-1 max-w-md">
+      <div className="flex items-center gap-3 flex-1 max-w-sm sm:max-w-md">
         {onToggleSidebar && (
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="md:hidden p-2 rounded-lg text-[#77758C] hover:bg-[#F8F6FF] hover:text-[#17213B] transition-colors"
+            className="md:hidden p-1.5 rounded-lg text-[#66708A] hover:bg-[#F8F6FF] hover:text-[#17213B] transition-colors"
             aria-label="Toggle navigation menu"
           >
             <Menu className="w-5 h-5" />
@@ -24,56 +24,48 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
         )}
 
         <div className="relative w-full">
-          <Search className="w-4 h-4 text-[#9995AA] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 text-[#8490A8] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             placeholder="Search anything..."
-            className="w-full bg-[#F8F6FF] border border-[#EAE6F2] rounded-lg pl-9 pr-14 py-2 text-[13px] text-[#17213B] placeholder:text-[#9995AA] focus:outline-none focus:border-[#7652D6] focus:bg-white transition-all"
+            className="w-full bg-white border border-[#EAE8F2] rounded-lg pl-8 pr-12 py-1.5 text-xs text-[#17213B] placeholder:text-[#8490A8] focus:outline-none focus:border-[#7652D6] transition-all"
           />
-          <span className="hidden sm:inline-flex items-center absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-medium text-[#9995AA] bg-white border border-[#EAE6F2] px-1.5 py-0.5 rounded shadow-2xs">
+          <span className="hidden sm:inline-flex items-center absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-medium text-[#8490A8]">
             ⌘ K
           </span>
         </div>
       </div>
 
-      {/* Right User Actions */}
-      <div className="flex items-center gap-4">
+      {/* Right User Actions (Screenshot 1 & 3: [ ⬡ 3 ]  Help  (SC)) */}
+      <div className="flex items-center gap-3 sm:gap-4">
+        {/* Outlined Notification/Reward Pill [ ⬡ 3 ] */}
+        <button
+          type="button"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#EAE8F2] bg-white hover:bg-[#FAF8FF] text-xs font-semibold text-[#7652D6] transition-colors shadow-2xs"
+          aria-label="3 notifications"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[#7652D6] fill-[#7652D6]" />
+          <span>3</span>
+        </button>
+
         {/* Help Link */}
         <a
           href="#help"
-          className="hidden sm:flex items-center gap-1.5 text-[13px] font-medium text-[#77758C] hover:text-[#17213B] transition-colors"
+          className="text-xs font-medium text-[#66708A] hover:text-[#17213B] transition-colors"
         >
-          <HelpCircle className="w-4 h-4 text-[#9995AA]" />
-          <span>Help</span>
+          Help
         </a>
 
-        {/* Notifications Icon with Badge */}
-        <button
-          type="button"
-          className="relative p-2 rounded-lg text-[#77758C] hover:bg-[#F8F6FF] hover:text-[#17213B] transition-colors"
-          aria-label="View notifications"
+        {/* Circular User Avatar with Initials SC */}
+        <div
+          className="w-7 h-7 rounded-full bg-[#EDE5FF] text-[#7048D8] font-bold text-[11px] flex items-center justify-center shadow-2xs cursor-pointer hover:ring-2 hover:ring-[#7652D6]/20 transition-all"
+          title="Sophie Carter"
         >
-          <Bell className="w-4.5 h-4.5" />
-          <span className="absolute top-1 right-1 min-w-[15px] h-[15px] bg-[#7652D6] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 ring-2 ring-white">
-            3
-          </span>
-        </button>
-
-        {/* Divider */}
-        <div className="h-5 w-[1px] bg-[#EEEAF4]" />
-
-        {/* Circular User Avatar with Initials */}
-        <div className="flex items-center gap-2.5 cursor-pointer">
-          <div className="w-8 h-8 rounded-full bg-[#EDE5FF] border border-[#D8CFEE] text-[#7048D8] font-bold text-xs flex items-center justify-center shadow-2xs">
-            SC
-          </div>
-          <div className="hidden lg:block text-left">
-            <p className="text-xs font-bold text-[#17213B] leading-tight">Sophie Carter</p>
-            <p className="text-[10px] text-[#77758C] leading-none">Studio owner</p>
-          </div>
+          SC
         </div>
       </div>
     </header>
   );
 }
+
 

@@ -6,9 +6,7 @@ import {
   BarChart,
   Bar,
   XAxis,
-  YAxis,
   Tooltip,
-  CartesianGrid,
 } from 'recharts';
 
 const weeklyData = [
@@ -16,9 +14,9 @@ const weeklyData = [
   { day: 'Tue', revenue: 2840 },
   { day: 'Wed', revenue: 2450 },
   { day: 'Thu', revenue: 3200 },
-  { day: 'Fri', revenue: 3800 },
-  { day: 'Sat', revenue: 2650 },
-  { day: 'Sun', revenue: 1380 },
+  { day: 'Fri', revenue: 2700 },
+  { day: 'Sat', revenue: 3800 },
+  { day: 'Sun', revenue: 3300 },
 ];
 
 interface CustomTooltipProps {
@@ -43,49 +41,39 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 
 export function RevenueChart() {
   return (
-    <div className="w-full h-[220px]">
+    <div className="w-full h-[200px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={weeklyData}
-          margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+          margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
         >
           <defs>
             <linearGradient id="purpleBarGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#7652D6" />
-              <stop offset="100%" stopColor="#C4B5FD" />
+              <stop offset="0%" stopColor="#9E7DF6" />
+              <stop offset="100%" stopColor="#D8C8FD" />
             </linearGradient>
           </defs>
-          <CartesianGrid
-            vertical={false}
-            stroke="#F4F1FA"
-            strokeDasharray="4 4"
-          />
           <XAxis
             dataKey="day"
-            axisLine={false}
+            axisLine={{ stroke: '#EAE6F2' }}
             tickLine={false}
-            tick={{ fill: '#9995AA', fontSize: 12, fontWeight: 500 }}
+            tick={{ fill: '#8490A8', fontSize: 11, fontWeight: 500 }}
             dy={8}
-          />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: '#9995AA', fontSize: 11 }}
-            tickFormatter={(value) => `$${value}`}
           />
           <Tooltip
             content={<CustomTooltip />}
-            cursor={{ fill: 'rgba(237, 229, 255, 0.4)', radius: 6 }}
+            cursor={{ fill: 'rgba(240, 234, 254, 0.4)', radius: 6 }}
           />
           <Bar
             dataKey="revenue"
             fill="url(#purpleBarGradient)"
             radius={[6, 6, 0, 0]}
-            maxBarSize={42}
+            maxBarSize={38}
           />
         </BarChart>
       </ResponsiveContainer>
     </div>
   );
 }
+
 
