@@ -4,60 +4,43 @@ import { type NextRequest, NextResponse } from 'next/server';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Skip static assets, health checks, and webhooks
+  // 1. Skip static assets, favicon, API webhooks, and auth callback endpoints
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/webhooks') ||
+    pathname.startsWith('/auth') ||
     pathname.includes('.') ||
     pathname === '/favicon.ico'
   ) {
     return NextResponse.next();
   }
 
-  // 2. Refresh Supabase Auth Session
+  // 2. Refresh Supabase Auth Session and retrieve current user
   const { supabaseResponse, user } = await updateSession(request);
 
-  // 3. Auth Redirection Guard
+  // 3. Define Auth Pages
   const isAuthPage =
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
     pathname.startsWith('/forgot-password') ||
     pathname.startsWith('/reset-password');
 
-  if (
-    !user &&
-    !isAuthPage &&
-    pathname !== '/' &&
-    !pathname.startsWith('/clients') &&
-    !pathname.startsWith('/booking') &&
-    !pathname.startsWith('/online-booking') &&
-    !pathname.startsWith('/receptionist') &&
-    !pathname.startsWith('/ai-receptionist') &&
-    !pathname.startsWith('/calls') &&
-    !pathname.startsWith('/calls-and-messages') &&
-    !pathname.startsWith('/messages') &&
-    !pathname.startsWith('/automations') &&
-    !pathname.startsWith('/sales') &&
-    !pathname.startsWith('/sales-and-payments') &&
-    !pathname.startsWith('/payments') &&
-    !pathname.startsWith('/staff') &&
-    !pathname.startsWith('/staff-and-services') &&
-    !pathname.startsWith('/services') &&
-      !pathname.startsWith('/settings') &&
-      !pathname.startsWith('/reports') &&
-      !pathname.startsWith('/reports-and-settings')
-  ) {
-    // Redirect unauthenticated visitors to login
+  // 4. MANDATORY AUTH GUARD:
+  // If user is NOT logged in and attempting to access any protected route (including root '/'),
+  // redirect them immediately to /login
+  if (!user && !isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
-    url.searchParams.set('redirectTo', pathname);
+    if (pathname !== '/') {
+      url.searchParams.set('redirectTo', pathname);
+    }
     return NextResponse.redirect(url);
   }
 
+  // 5. If user IS already logged in and attempts to visit login/signup, redirect to dashboard '/'
   if (user && isAuthPage) {
-    // Redirect logged-in users away from auth pages
     const url = request.nextUrl.clone();
-    url.pathname = '/onboarding';
+    url.pathname = '/';
     return NextResponse.redirect(url);
   }
 
@@ -67,4 +50,3 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 };
-

@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { AppointmentStatusBadge, AppointmentStatus } from './appointment-status-badge';
 
@@ -68,13 +69,13 @@ export function TodaysAppointments() {
         <h2 className="text-[15px] font-bold text-[#17213B] tracking-tight">
           Today's appointments
         </h2>
-        <button
-          type="button"
+        <Link
+          href="/calendar"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#77758C] bg-white border border-[#E9E5F0] rounded-lg hover:border-[#D8CFEE] hover:text-[#17213B] transition-colors"
         >
           <span>View calendar</span>
           <ArrowRight className="w-3.5 h-3.5 text-[#858197]" />
-        </button>
+        </Link>
       </div>
 
       {/* Table Container with Horizontal Scroll for Mobile */}

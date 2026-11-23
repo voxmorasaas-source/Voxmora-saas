@@ -3,11 +3,19 @@ import { createServerClient as createClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/database.types';
 
+function normalizeSupabaseUrl(url?: string): string {
+  if (!url) return 'https://placeholder.supabase.co';
+  let clean = url.trim();
+  clean = clean.replace(/\/rest\/v1\/?$/, '');
+  clean = clean.replace(/\/+$/, '');
+  return clean;
+}
+
 export async function createServerClient() {
   const cookieStore = await cookies();
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
+  const supabaseUrl = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder').trim();
 
   return createClient<Database>(
     supabaseUrl,

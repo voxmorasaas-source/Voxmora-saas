@@ -9,7 +9,16 @@ export type Json =
 export type UserRole = 'owner' | 'admin' | 'member';
 export type CallStatus = 'in_progress' | 'completed' | 'busy' | 'no_answer' | 'failed' | 'transferred';
 export type CallOutcome = 'appointment_booked' | 'inquiry_resolved' | 'transferred_to_staff' | 'lead_captured' | 'spam' | 'unresolved';
-export type AppointmentStatus = 'confirmed' | 'rescheduled' | 'cancelled' | 'completed' | 'no_show';
+export type AppointmentStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'checked_in'
+  | 'in_progress'
+  | 'rescheduled'
+  | 'completed'
+  | 'cancelled'
+  | 'no_show';
+export type BookingSource = 'manual' | 'ai' | 'online';
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
 export type PhoneNumberStatus = 'active' | 'pending_verification' | 'released';
 
@@ -412,8 +421,17 @@ export type Database = {
         Row: {
           id: string;
           organization_id: string;
-          customer_id: string;
+          customer_id: string | null;
           service_id: string | null;
+          staff_id: string | null;
+          staff_name: string | null;
+          client_name: string | null;
+          client_phone: string | null;
+          client_email: string | null;
+          service_name: string | null;
+          price_cents: number;
+          duration_minutes: number;
+          booking_source: BookingSource;
           call_id: string | null;
           external_provider: string | null;
           external_booking_id: string | null;
@@ -421,14 +439,25 @@ export type Database = {
           end_time: string;
           status: AppointmentStatus;
           notes: string | null;
+          follow_up_status: string;
+          bland_call_id: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           organization_id: string;
-          customer_id: string;
+          customer_id?: string | null;
           service_id?: string | null;
+          staff_id?: string | null;
+          staff_name?: string | null;
+          client_name?: string | null;
+          client_phone?: string | null;
+          client_email?: string | null;
+          service_name?: string | null;
+          price_cents?: number;
+          duration_minutes?: number;
+          booking_source?: BookingSource;
           call_id?: string | null;
           external_provider?: string | null;
           external_booking_id?: string | null;
@@ -436,16 +465,30 @@ export type Database = {
           end_time: string;
           status?: AppointmentStatus;
           notes?: string | null;
+          follow_up_status?: string;
+          bland_call_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
+          customer_id?: string | null;
           service_id?: string | null;
+          staff_id?: string | null;
+          staff_name?: string | null;
+          client_name?: string | null;
+          client_phone?: string | null;
+          client_email?: string | null;
+          service_name?: string | null;
+          price_cents?: number;
+          duration_minutes?: number;
+          booking_source?: BookingSource;
           external_booking_id?: string | null;
           start_time?: string;
           end_time?: string;
           status?: AppointmentStatus;
           notes?: string | null;
+          follow_up_status?: string;
+          bland_call_id?: string | null;
           updated_at?: string;
         };
         Relationships: [];

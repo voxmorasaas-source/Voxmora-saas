@@ -1,5 +1,11 @@
 import 'server-only';
-import { IBookingProviderAdapter, CheckAvailabilityParams, TimeSlot, CreateBookingParams, BookingResult } from './booking-adapter.interface';
+import {
+  IBookingProviderAdapter,
+  CheckAvailabilityParams,
+  TimeSlot,
+  CreateBookingParams,
+  BookingResult,
+} from './booking-adapter.interface';
 import { createServerClient } from '@/lib/supabase/server';
 import { AppointmentRepository } from '@/server/repositories/appointment.repository';
 import { parseISO, addMinutes, format, setHours, setMinutes } from 'date-fns';
@@ -10,17 +16,22 @@ export class InternalBookingAdapter implements IBookingProviderAdapter {
   async checkAvailability(params: CheckAvailabilityParams): Promise<TimeSlot[]> {
     const supabase = await createServerClient();
 
-    // 1. Get service duration
-    const { data: service } = await supabase
-      .from('services')
-      .select('duration_minutes')
-      .eq('organization_id', params.organizationId)
-      .eq('id', params.serviceId)
-      .single();
+    // 1. Get service duration if serviceId provided
+    let duration = 30;
+    if (params.serviceId) {
+      const { data: service } = await supabase
+        .from('services')
+        .select('duration_minutes')
+        .eq('organization_id', params.organizationId)
+        .eq('id', params.serviceId)
+        .maybeSingle();
 
-    const duration = service ? (service as { duration_minutes: number }).duration_minutes : 30;
+      if (service && (service as any).duration_minutes) {
+        duration = (service as any).duration_minutes;
+      }
+    }
 
-    // 2. Generate standard 9:00 AM - 5:00 PM candidate slots
+    // 2. Generate standard business hour slots: 9:00 AM - 5:00 PM (17:00)
     const slots: TimeSlot[] = [];
     const baseDate = parseISO(params.date);
 
@@ -29,14 +40,20 @@ export class InternalBookingAdapter implements IBookingProviderAdapter {
         const slotStart = setMinutes(setHours(baseDate, hour), min);
         const slotEnd = addMinutes(slotStart, duration);
 
+        // Don't exceed business closing at 17:00
+        if (slotEnd.getHours() > 17 || (slotEnd.getHours() === 17 && slotEnd.getMinutes() > 0)) {
+          continue;
+        }
+
         const startIso = slotStart.toISOString();
         const endIso = slotEnd.toISOString();
 
-        // 3. Check database conflict
-        const hasConflict = await this.appointmentRepo.checkConflicts(
+        // 3. Double-booking check for specific staff member or general availability
+        const hasConflict = await this.appointmentRepo.checkStaffConflicts(
           params.organizationId,
           startIso,
-          endIso
+          endIso,
+          params.staffId
         );
 
         if (!hasConflict) {
@@ -45,6 +62,7 @@ export class InternalBookingAdapter implements IBookingProviderAdapter {
             endTime: endIso,
             formattedTime: format(slotStart, 'hh:mm a'),
             available: true,
+            staffId: params.staffId,
           });
         }
       }
@@ -56,62 +74,112 @@ export class InternalBookingAdapter implements IBookingProviderAdapter {
   async createBooking(params: CreateBookingParams): Promise<BookingResult> {
     const supabase = await createServerClient();
 
-    // Find or create customer
-    const { data: existingCustomer } = await supabase
-      .from('customers')
-      .select('id')
-      .eq('organization_id', params.organizationId)
-      .eq('phone', params.customerPhone)
-      .maybeSingle();
+    // 1. Find or create customer in CRM (optional link)
+    let customerId: string | null = null;
+    try {
+      if (params.customerPhone) {
+        const { data: existingCustomer, error: searchError } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('organization_id', params.organizationId)
+          .eq('phone', params.customerPhone)
+          .maybeSingle();
 
-    let customerId: string;
+        if (!searchError && existingCustomer) {
+          customerId = (existingCustomer as { id: string }).id;
+        } else if (!searchError) {
+          const nameParts = params.customerName.trim().split(' ');
+          const firstName = nameParts[0] || 'Client';
+          const lastName = nameParts.slice(1).join(' ') || '';
 
-    if (!existingCustomer) {
-      const nameParts = params.customerName.split(' ');
-      const firstName = nameParts[0] || 'Unknown';
-      const lastName = nameParts.slice(1).join(' ') || '';
+          const { data: newCustomer, error: custError } = await (supabase.from('customers') as any)
+            .insert({
+              organization_id: params.organizationId,
+              phone: params.customerPhone,
+              first_name: firstName,
+              last_name: lastName,
+              email: params.customerEmail || null,
+            })
+            .select('id')
+            .maybeSingle();
 
-      const { data: newCustomer, error: custError } = await supabase
-        .from('customers')
-        .insert({
-          organization_id: params.organizationId,
-          phone: params.customerPhone,
-          first_name: firstName,
-          last_name: lastName,
-          email: params.customerEmail || null,
-        } as any)
-        .select('id')
-        .single();
-
-      if (custError || !newCustomer) {
-        throw new Error(custError?.message || 'Failed to create customer record');
+          if (!custError && newCustomer) {
+            customerId = (newCustomer as { id: string }).id;
+          }
+        }
       }
-      customerId = (newCustomer as { id: string }).id;
-    } else {
-      customerId = (existingCustomer as { id: string }).id;
+    } catch (e) {
+      console.warn('[InternalBookingAdapter] Could not link customer in CRM (table may not exist yet):', e);
     }
 
-    // Determine end time from service
-    const { data: service } = await supabase
-      .from('services')
-      .select('duration_minutes')
-      .eq('organization_id', params.organizationId)
-      .eq('id', params.serviceId)
-      .single();
+    // 2. Determine service details (duration & price)
+    let duration = params.durationMinutes || 30;
+    let priceCents = params.priceCents || 0;
+    let serviceName = params.serviceName || 'Custom Service';
 
-    const duration = service ? (service as { duration_minutes: number }).duration_minutes : 30;
+    if (params.serviceId) {
+      try {
+        const { data: service, error: srvError } = await supabase
+          .from('services')
+          .select('name, duration_minutes, price_cents')
+          .eq('organization_id', params.organizationId)
+          .eq('id', params.serviceId)
+          .maybeSingle();
+
+        if (!srvError && service) {
+          const s = service as any;
+          if (s.name) serviceName = s.name;
+          if (s.duration_minutes) duration = s.duration_minutes;
+          if (s.price_cents !== undefined && s.price_cents !== null && !params.priceCents) {
+            priceCents = s.price_cents;
+          }
+        }
+      } catch (e) {
+        console.warn('[InternalBookingAdapter] Could not query services table:', e);
+      }
+    }
+
     const start = parseISO(params.startTime);
-    const end = addMinutes(start, duration);
+    const end = params.endTime ? parseISO(params.endTime) : addMinutes(start, duration);
+    const startIso = start.toISOString();
+    const endIso = end.toISOString();
 
+    // 3. Strict Concurrency Check: prevent double booking the same staff member
+    const hasConflict = await this.appointmentRepo.checkStaffConflicts(
+      params.organizationId,
+      startIso,
+      endIso,
+      params.staffId
+    );
+
+    if (hasConflict) {
+      throw new Error(
+        params.staffName
+          ? `${params.staffName} is already booked during this time slot. Please choose another time or staff member.`
+          : 'This time slot is already booked. Please choose another time.'
+      );
+    }
+
+    // 4. Create appointment
     const appointment = await this.appointmentRepo.create({
       organization_id: params.organizationId,
       customer_id: customerId,
-      service_id: params.serviceId,
+      service_id: params.serviceId || null,
+      service_name: serviceName,
+      staff_id: params.staffId || null,
+      staff_name: params.staffName || null,
+      client_name: params.customerName,
+      client_phone: params.customerPhone,
+      client_email: params.customerEmail || null,
+      price_cents: priceCents,
+      duration_minutes: duration,
+      booking_source: params.bookingSource || 'manual',
       external_provider: 'internal',
-      start_time: start.toISOString(),
-      end_time: end.toISOString(),
+      start_time: startIso,
+      end_time: endIso,
       status: 'confirmed',
       notes: params.notes || null,
+      follow_up_status: 'pending',
     });
 
     return {
@@ -119,13 +187,15 @@ export class InternalBookingAdapter implements IBookingProviderAdapter {
       status: 'confirmed',
       startTime: appointment.start_time,
       endTime: appointment.end_time,
+      appointment,
     };
   }
 
   async cancelBooking(bookingId: string, reason?: string): Promise<boolean> {
     const supabase = await createServerClient();
-    const updatePayload: { status: 'cancelled'; notes?: string } = {
+    const updatePayload: { status: 'cancelled'; notes?: string; updated_at: string } = {
       status: 'cancelled',
+      updated_at: new Date().toISOString(),
       ...(reason && { notes: `Cancelled: ${reason}` }),
     };
 
