@@ -36,7 +36,7 @@ export class AppointmentRepository extends BaseRepository {
       .select('*');
 
     if (orgId && orgId !== '00000000-0000-0000-0000-000000000001') {
-      query = query.eq('organization_id', orgId);
+      query = query.or(`organization_id.eq.${orgId},organization_id.eq.00000000-0000-0000-0000-000000000001`);
     }
 
     if (filters?.startDate) {
@@ -97,7 +97,7 @@ export class AppointmentRepository extends BaseRepository {
       .eq('id', id);
 
     if (orgId && orgId !== '00000000-0000-0000-0000-000000000001') {
-      query = query.eq('organization_id', orgId);
+      query = query.or(`organization_id.eq.${orgId},organization_id.eq.00000000-0000-0000-0000-000000000001`);
     }
 
     const { data, error } = await query.maybeSingle();
@@ -115,6 +115,58 @@ export class AppointmentRepository extends BaseRepository {
     }
 
     return data as AppointmentRow | null;
+  }
+
+  /**
+   * Find latest active appointment for a customer by phone number (or name fallback)
+   */
+  async findLatestByPhone(phone: string, name?: string): Promise<AppointmentRow | null> {
+    const supabase = await this.getClient();
+    const cleanDigits = phone.replace(/\D/g, '');
+    const searchPattern = cleanDigits.length >= 7 ? `%${cleanDigits.slice(-7)}%` : `%${cleanDigits}%`;
+
+    // 1. Try search by phone pattern
+    let { data: appts, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .ilike('client_phone', searchPattern)
+      .neq('status', 'cancelled')
+      .order('start_time', { ascending: false })
+      .limit(1);
+
+    if (!error && appts && appts.length > 0) {
+      return appts[0] as AppointmentRow;
+    }
+
+    // 2. Fallback search by client name if phone format differed
+    if (name && name.trim().length >= 2) {
+      const { data: byName } = await supabase
+        .from('appointments')
+        .select('*')
+        .ilike('client_name', `%${name.trim()}%`)
+        .neq('status', 'cancelled')
+        .order('start_time', { ascending: false })
+        .limit(1);
+
+      if (byName && byName.length > 0) {
+        return byName[0] as AppointmentRow;
+      }
+    }
+
+    // 3. Fallback search in dev memory store
+    const foundDev = devAppointmentsStore.find((a) => {
+      if (a.status === 'cancelled') return false;
+      const aDigits = (a.client_phone || '').replace(/\D/g, '');
+      if (cleanDigits && (aDigits.includes(cleanDigits) || cleanDigits.includes(aDigits))) {
+        return true;
+      }
+      if (name && (a.client_name || '').toLowerCase().includes(name.toLowerCase())) {
+        return true;
+      }
+      return false;
+    });
+
+    return foundDev || null;
   }
 
   /**
@@ -180,7 +232,7 @@ export class AppointmentRepository extends BaseRepository {
       .eq('id', id);
 
     if (orgId && orgId !== '00000000-0000-0000-0000-000000000001') {
-      query = query.eq('organization_id', orgId);
+      query = query.or(`organization_id.eq.${orgId},organization_id.eq.00000000-0000-0000-0000-000000000001`);
     }
 
     const { data: record, error } = await query.select('*').maybeSingle();
@@ -228,7 +280,7 @@ export class AppointmentRepository extends BaseRepository {
       .eq('id', id);
 
     if (orgId && orgId !== '00000000-0000-0000-0000-000000000001') {
-      query = query.eq('organization_id', orgId);
+      query = query.or(`organization_id.eq.${orgId},organization_id.eq.00000000-0000-0000-0000-000000000001`);
     }
 
     const { data: record, error } = await query.select('*').maybeSingle();
@@ -283,7 +335,7 @@ export class AppointmentRepository extends BaseRepository {
       .gt('end_time', startTime);
 
     if (orgId && orgId !== '00000000-0000-0000-0000-000000000001') {
-      query = query.eq('organization_id', orgId);
+      query = query.or(`organization_id.eq.${orgId},organization_id.eq.00000000-0000-0000-0000-000000000001`);
     }
     if (staffId) {
       query = query.eq('staff_id', staffId);

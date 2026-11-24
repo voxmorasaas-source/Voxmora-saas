@@ -318,8 +318,8 @@ export function CalendarView() {
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             initialView="timeGridWeek"
             headerToolbar={false}
-            slotMinTime="08:00:00"
-            slotMaxTime="20:00:00"
+            slotMinTime="06:00:00"
+            slotMaxTime="23:30:00"
             slotDuration="00:30:00"
             allDaySlot={false}
             nowIndicator={true}

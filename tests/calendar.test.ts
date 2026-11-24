@@ -108,6 +108,26 @@ describe('Calendar and Booking Validation Schemas', () => {
     const nullNotes = updateAppointmentSchema.safeParse({ notes: null });
     expect(nullNotes.success).toBe(true);
   });
+
+  it('validates AI reschedule appointment payload with phone and new start time', () => {
+    const { aiRescheduleAppointmentSchema } = require('../src/schemas/appointment.schema');
+    const validReschedule = {
+      customerPhone: '+1 (555) 123-4567',
+      newStartTime: '2026-11-25T14:00:00.000Z',
+      customerName: 'Sarah Jenkins',
+      notes: 'Customer asked to postpone by 2 hours',
+    };
+
+    const parsed = aiRescheduleAppointmentSchema.safeParse(validReschedule);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.customerPhone).toBe('+1 (555) 123-4567');
+      expect(parsed.data.newStartTime).toBe('2026-11-25T14:00:00.000Z');
+    }
+
+    const invalid = aiRescheduleAppointmentSchema.safeParse({ customerPhone: '' });
+    expect(invalid.success).toBe(false);
+  });
 });
 
 describe('Staff Double-Booking Conflict Prevention Logic', () => {

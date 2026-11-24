@@ -35,8 +35,17 @@ export const createAppointmentSchema = z
     serviceName: z.string().min(1, 'Service name is required'),
     staffId: z.string().optional(),
     staffName: z.string().optional(),
-    startTime: z.string().datetime({ message: 'Start time must be ISO 8601 string' }),
-    endTime: z.string().datetime({ message: 'End time must be ISO 8601 string' }).optional(),
+    startTime: z
+      .string()
+      .trim()
+      .refine((val) => !isNaN(Date.parse(val)), { message: 'Start time must be a valid date or ISO 8601 string' })
+      .transform((val) => new Date(val).toISOString()),
+    endTime: z
+      .string()
+      .trim()
+      .refine((val) => !isNaN(Date.parse(val)), { message: 'End time must be a valid date or ISO 8601 string' })
+      .transform((val) => new Date(val).toISOString())
+      .optional(),
     durationMinutes: z.number().int().positive().default(30),
     priceCents: z.number().int().nonnegative().default(0),
     bookingSource: bookingSourceSchema.default('manual'),
@@ -67,8 +76,18 @@ export const updateAppointmentSchema = z.object({
   serviceName: z.string().optional(),
   staffId: z.string().optional().nullable(),
   staffName: z.string().optional().nullable(),
-  startTime: z.string().datetime().optional(),
-  endTime: z.string().datetime().optional(),
+  startTime: z
+    .string()
+    .trim()
+    .refine((val) => !isNaN(Date.parse(val)), { message: 'Start time must be a valid date or ISO 8601 string' })
+    .transform((val) => new Date(val).toISOString())
+    .optional(),
+  endTime: z
+    .string()
+    .trim()
+    .refine((val) => !isNaN(Date.parse(val)), { message: 'End time must be a valid date or ISO 8601 string' })
+    .transform((val) => new Date(val).toISOString())
+    .optional(),
   durationMinutes: z.number().int().positive().optional(),
   priceCents: z.number().int().nonnegative().optional(),
   status: appointmentStatusSchema.optional(),
@@ -87,6 +106,14 @@ export const rescheduleAppointmentSchema = z.object({
   newStartTime: z.string().datetime({ message: 'Start time must be ISO 8601 string' }),
   newEndTime: z.string().datetime().optional(),
   staffId: z.string().optional(),
+});
+
+export const aiRescheduleAppointmentSchema = z.object({
+  customerPhone: z.string().min(3, 'Phone number is required'),
+  newStartTime: z.string().min(10, 'New start time is required'),
+  newEndTime: z.string().optional(),
+  customerName: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 export type CheckAvailabilityInput = z.infer<typeof checkAvailabilitySchema>;

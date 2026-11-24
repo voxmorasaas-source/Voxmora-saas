@@ -4,10 +4,12 @@ import { type NextRequest, NextResponse } from 'next/server';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Skip static assets, favicon, API webhooks, and auth callback endpoints
+  // 1. Skip static assets, favicon, public API endpoints (webhooks, AI tools, availability), and auth callback endpoints
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/webhooks') ||
+    pathname.startsWith('/api/availability') ||
+    pathname.startsWith('/api/ai') ||
     pathname.startsWith('/auth') ||
     pathname.includes('.') ||
     pathname === '/favicon.ico'

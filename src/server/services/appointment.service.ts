@@ -172,6 +172,32 @@ export class AppointmentService {
     });
   }
 
+  async rescheduleAppointmentByPhone(params: {
+    customerPhone: string;
+    newStartTime: string;
+    newEndTime?: string;
+    customerName?: string;
+    notes?: string;
+  }) {
+    const existing = await this.repo.findLatestByPhone(params.customerPhone, params.customerName);
+    if (!existing) {
+      throw new Error(`No active appointment found for phone number ${params.customerPhone}`);
+    }
+
+    const startIso = parseISO(params.newStartTime).toISOString();
+    const duration = existing.duration_minutes || 30;
+    const endIso = params.newEndTime
+      ? parseISO(params.newEndTime).toISOString()
+      : addMinutes(parseISO(startIso), duration).toISOString();
+
+    return await this.updateAppointment(existing.id, existing.organization_id, {
+      startTime: startIso,
+      endTime: endIso,
+      status: 'confirmed',
+      notes: params.notes || `Rescheduled via Mira AI Voice Assistant (Previously: ${existing.start_time})`,
+    });
+  }
+
   async updateStatus(id: string, orgId: string, status: AppointmentStatus, notes?: string) {
     const targetOrgId = await this.resolveOrgId(orgId);
     const existing = await this.repo.findById(id, targetOrgId);
