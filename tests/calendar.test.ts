@@ -289,5 +289,36 @@ describe('Automated Follow-up Overdue Detection Logic', () => {
     expect(needsFollowUp.length).toBe(1);
     expect(needsFollowUp[0].clientName).toBe('Emma');
   });
+
+  describe('Timezone Normalization and Wall-Clock Time Handling', () => {
+    it('converts spoken 9:30 AM in Asia/Kolkata (IST) to 04:00 UTC regardless of trailing Z', async () => {
+      const { wallClockToUtc } = await import('../src/lib/timezone');
+      
+      // When AI sends wall-clock time with Z attached
+      const utc1 = wallClockToUtc('2026-11-27T09:30:00.000Z', 'Asia/Kolkata');
+      expect(utc1).toBe('2026-11-27T04:00:00Z');
+
+      // When AI sends without Z
+      const utc2 = wallClockToUtc('2026-11-27T09:30:00', 'Asia/Kolkata');
+      expect(utc2).toBe('2026-11-27T04:00:00Z');
+
+      // When AI sends date and time with space
+      const utc3 = wallClockToUtc('2026-11-27 09:30', 'Asia/Kolkata');
+      expect(utc3).toBe('2026-11-27T04:00:00Z');
+
+      // For 11:00 AM in Asia/Kolkata (IST) -> 05:30 UTC
+      const utc4 = wallClockToUtc('2026-11-26T11:00:00.000Z', 'Asia/Kolkata');
+      expect(utc4).toBe('2026-11-26T05:30:00Z');
+    });
+
+    it('generates availability slots anchored to salon timezone', async () => {
+      const { createSlotInTimezone } = await import('../src/lib/timezone');
+      const slot = createSlotInTimezone('2026-11-27', 9, 30, 30, 'Asia/Kolkata');
+      
+      expect(slot.startIso).toBe('2026-11-27T04:00:00Z');
+      expect(slot.endIso).toBe('2026-11-27T04:30:00Z');
+      expect(slot.formattedTime).toBe('09:30 AM');
+    });
+  });
 });
 

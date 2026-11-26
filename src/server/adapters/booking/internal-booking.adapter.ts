@@ -9,6 +9,7 @@ import {
 import { createServerClient } from '@/lib/supabase/server';
 import { AppointmentRepository } from '@/server/repositories/appointment.repository';
 import { parseISO, addMinutes, format, setHours, setMinutes } from 'date-fns';
+import { createSlotInTimezone, DEFAULT_APP_TIMEZONE } from '@/lib/timezone';
 
 export class InternalBookingAdapter implements IBookingProviderAdapter {
   private readonly appointmentRepo = new AppointmentRepository();
@@ -31,22 +32,25 @@ export class InternalBookingAdapter implements IBookingProviderAdapter {
       }
     }
 
-    // 2. Generate standard business hour slots: 9:00 AM - 5:00 PM (17:00)
+    // 2. Generate standard business hour slots: 9:00 AM - 5:00 PM (17:00) anchored to target timezone
     const slots: TimeSlot[] = [];
-    const baseDate = parseISO(params.date);
+    const targetTz = params.timezone || DEFAULT_APP_TIMEZONE;
 
     for (let hour = 9; hour < 17; hour++) {
       for (let min = 0; min < 60; min += duration) {
-        const slotStart = setMinutes(setHours(baseDate, hour), min);
-        const slotEnd = addMinutes(slotStart, duration);
-
-        // Don't exceed business closing at 17:00
-        if (slotEnd.getHours() > 17 || (slotEnd.getHours() === 17 && slotEnd.getMinutes() > 0)) {
+        const totalMinutes = hour * 60 + min + duration;
+        // Don't exceed business closing at 17:00 (17 * 60 = 1020 mins)
+        if (totalMinutes > 17 * 60) {
           continue;
         }
 
-        const startIso = slotStart.toISOString();
-        const endIso = slotEnd.toISOString();
+        const { startIso, endIso, formattedTime } = createSlotInTimezone(
+          params.date,
+          hour,
+          min,
+          duration,
+          targetTz
+        );
 
         // 3. Double-booking check for specific staff member or general availability
         const hasConflict = await this.appointmentRepo.checkStaffConflicts(
@@ -60,7 +64,7 @@ export class InternalBookingAdapter implements IBookingProviderAdapter {
           slots.push({
             startTime: startIso,
             endTime: endIso,
-            formattedTime: format(slotStart, 'hh:mm a'),
+            formattedTime,
             available: true,
             staffId: params.staffId,
           });

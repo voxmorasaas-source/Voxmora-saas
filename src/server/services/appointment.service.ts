@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { CheckAvailabilityParams, CreateBookingParams } from '../adapters/booking/booking-adapter.interface';
 import type { AppointmentStatus } from '@/types/database.types';
 import { addMinutes, parseISO } from 'date-fns';
+import { wallClockToUtc, DEFAULT_APP_TIMEZONE } from '@/lib/timezone';
 
 export class AppointmentService {
   constructor(private readonly repo = new AppointmentRepository()) {}
@@ -56,6 +57,28 @@ export class AppointmentService {
     return '00000000-0000-0000-0000-000000000001';
   }
 
+  /**
+   * Helper to resolve the organization's operating timezone
+   */
+  async resolveOrgTimezone(providedOrgId?: string): Promise<string> {
+    try {
+      const orgId = await this.resolveOrgId(providedOrgId);
+      const adminSupabase = createAdminClient();
+      const { data: org } = await adminSupabase
+        .from('organizations')
+        .select('timezone')
+        .eq('id', orgId)
+        .maybeSingle();
+
+      if (org && (org as any).timezone) {
+        return (org as any).timezone;
+      }
+    } catch (e) {
+      console.warn('[AppointmentService] Org timezone resolution warning:', e);
+    }
+    return DEFAULT_APP_TIMEZONE;
+  }
+
   private async getAdapterForOrg(orgId: string) {
     try {
       const supabase = await createServerClient();
@@ -81,8 +104,19 @@ export class AppointmentService {
 
   async bookAppointment(params: CreateBookingParams) {
     const orgId = await this.resolveOrgId(params.organizationId);
+    const orgTimezone = await this.resolveOrgTimezone(orgId);
+    const normalizedStart = wallClockToUtc(params.startTime, orgTimezone);
+    const normalizedEnd = params.endTime
+      ? wallClockToUtc(params.endTime, orgTimezone)
+      : addMinutes(parseISO(normalizedStart), params.durationMinutes || 30).toISOString();
+
     const adapter = await this.getAdapterForOrg(orgId);
-    return await adapter.createBooking({ ...params, organizationId: orgId });
+    return await adapter.createBooking({
+      ...params,
+      organizationId: orgId,
+      startTime: normalizedStart,
+      endTime: normalizedEnd,
+    });
   }
 
   async listAppointments(orgId?: string, filters?: AppointmentFilterParams) {
@@ -184,10 +218,11 @@ export class AppointmentService {
       throw new Error(`No active appointment found for phone number ${params.customerPhone}`);
     }
 
-    const startIso = parseISO(params.newStartTime).toISOString();
+    const orgTimezone = await this.resolveOrgTimezone(existing.organization_id);
+    const startIso = wallClockToUtc(params.newStartTime, orgTimezone);
     const duration = existing.duration_minutes || 30;
     const endIso = params.newEndTime
-      ? parseISO(params.newEndTime).toISOString()
+      ? wallClockToUtc(params.newEndTime, orgTimezone)
       : addMinutes(parseISO(startIso), duration).toISOString();
 
     return await this.updateAppointment(existing.id, existing.organization_id, {

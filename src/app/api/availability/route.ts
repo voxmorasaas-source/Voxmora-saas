@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AppointmentService } from '@/server/services/appointment.service';
 import { checkAvailabilitySchema } from '@/schemas/appointment.schema';
+import { DEFAULT_APP_TIMEZONE } from '@/lib/timezone';
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +9,7 @@ export async function GET(request: NextRequest) {
     const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
     const serviceId = searchParams.get('serviceId') || undefined;
     const staffId = searchParams.get('staffId') || undefined;
-    const timezone = searchParams.get('timezone') || 'America/New_York';
+    const timezone = searchParams.get('timezone') || DEFAULT_APP_TIMEZONE;
     const organizationId = searchParams.get('organizationId') || undefined;
 
     const validated = checkAvailabilitySchema.parse({
